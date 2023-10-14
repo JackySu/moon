@@ -5,6 +5,7 @@ use bevy_rapier2d::prelude::*;
 pub static SCENE_Z_INDEX: f32 = -1.;
 pub static STAR_Z_INDEX: f32 = 3.;
 pub static LEVEL_SCENE_LINE_WIDTH: f32 = 5.;
+pub static STAR_RADIUS: f32 = 20.;
 
 use crate::{LevelState, GameState, ColliderType, PlayerStatus};
 
