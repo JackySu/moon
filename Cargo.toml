@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
@@ -17,11 +18,14 @@ opt-level = 3
 opt-level = 3
 
 [dependencies]
-bevy = { version = "0.11.3", features = ["dynamic_linking"] }
 cfg-if = "1.0.0"
 bevy_prototype_lyon = "0.9.0"
 
+[dependencies.bevy]
+version = "0.11.3"
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+bevy = { version = "0.11.3", features = ["dynamic_linking"] }
 bevy_rapier2d = { version = "0.22.0", features = ["simd-stable"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

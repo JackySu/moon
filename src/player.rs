@@ -1,9 +1,11 @@
-use bevy::{prelude::*, window::PrimaryWindow, utils::HashMap};
+#![allow(unused_imports)]
+use bevy::{prelude::*, window::PrimaryWindow, utils::{HashMap, tracing::level_filters}};
 use bevy_rapier2d::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
-use crate::ColliderType;
+use crate::{ColliderType, GameLevels, LevelState, level, GameState};
 
+pub static PLAYER_RADIUS: f32 = 25.0;
 pub static PLAYER_GRAVITY_SCALE: f32 = 9.8;
 pub static PLAYER_DRAW_LINE_WIDTH: f32 = 10.;
 pub static PLAYER_DRAW_DISTANCE_TO_BALL_THRESHOLD: f32 = 23.;
@@ -267,6 +269,41 @@ pub fn mouse_draw(
     }
 
 }
+
+pub fn spawn_player(
+    current_level: Res<LevelState>,
+    all_levels: Res<GameLevels>,
+    mut commands: Commands
+) {
+    let level_id = (*current_level).id;
+    let player_start_position = (*all_levels).0[level_id].player;
+    commands
+        .spawn((
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&shapes::Circle {
+                    radius: PLAYER_RADIUS,
+                    center: Vec2::ZERO,
+                }),
+                ..default()
+            },
+            Fill::color(Color::WHITE),
+            RigidBody::Dynamic,
+            PlayerStatus::default(),
+        ))
+        .insert((
+            Collider::ball(PLAYER_RADIUS),
+            ColliderMassProperties::Density(1.0),
+            ActiveEvents::COLLISION_EVENTS,
+            Restitution::coefficient(0.8),
+            Friction::default(),
+            TransformBundle::from(Transform::from_xyz(player_start_position.x, player_start_position.y, 0.0)),
+            Velocity::default(),
+            GravityScale(0.0),
+            Sleeping::disabled(),
+            Ccd::enabled(),
+        ));
+}
+
 
 pub fn set_gravity(
     keyboard: Res<Input<KeyCode>>,

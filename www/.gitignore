@@ -1,5 +1,1 @@
-*.wasm
-*.js
-*.ts
-package.json
-package-lock.json
+*
