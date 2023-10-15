@@ -1,2 +1,6 @@
 /src/bin
 /target
+*.wasm
+*.ts
+*.js
+package.json
