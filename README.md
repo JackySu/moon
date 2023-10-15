@@ -15,7 +15,7 @@ rustup target add wasm32-unknown-unknown
 - you can whether build bin yourself or the wasm version by
 
 ```shell
-wasm-pack build --target web --release --out-dir .
+wasm-pack build --target web --release
 ```
 
 - additional
@@ -25,7 +25,9 @@ wasm-pack build --target web --release --out-dir .
         * `--profiling` optimized but with logs
         * `--release` full optimized but takes longer time
 
-    - scaffolding files are already in root dir, just build and play 
+    - scaffolding files are already in root dir
+    
+    - just build and serve `index.html` to play 
 
 # Simple Level Editor
 
