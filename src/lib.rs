@@ -1,7 +1,8 @@
 #![allow(unused_parens)]
-use bevy::{prelude::*, render::texture::ImageSampler, window::{PresentMode::AutoVsync, WindowResolution}};
+use bevy::{prelude::*, render::texture::ImageSampler, window::{PresentMode::AutoVsync, WindowResolution}, utils::Duration};
 use bevy_rapier2d::prelude::*;
 use bevy_prototype_lyon::prelude::*;
+use bevy_kira_audio::prelude::*;
 
 use cfg_if::cfg_if;
 
@@ -67,6 +68,7 @@ pub fn run_app() {
         ))
         .add_plugins((
             RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(PIXELS_PER_METER),
+            AudioPlugin,
         ))
         .add_plugins(ShapePlugin)
         .register_type::<PlayerCurrentLineEntity>()
@@ -89,9 +91,10 @@ fn setup_graphics(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
 
-fn setup_music(asset_server: Res<AssetServer>, mut commands: Commands) {
-    commands.spawn(AudioBundle {
-        source: asset_server.load("Tokyo Ghoul：re OST - Mvt.11 “Memories”.ogg"),
-        ..default()
-    });
+fn setup_music(asset_server: Res<AssetServer>, audio: Res<Audio>) {
+    audio.play(asset_server.load("Tokyo Ghoul：re OST - Mvt.11 “Memories”.ogg"))
+        .looped()
+        .fade_in(AudioTween::new(Duration::from_secs(1), AudioEasing::OutPowi((2))))
+        .with_volume(0.62);
 }
+

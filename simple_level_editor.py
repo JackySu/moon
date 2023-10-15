@@ -1,7 +1,14 @@
 from dataclasses import dataclass
 from enum import Enum, unique
+from sys import platform
 import pygame
 import os
+
+# if running on windows
+if platform == "win32":
+    import win32api
+    import win32con
+    import win32gui
 
 
 ENCODING = 'UTF-8'
@@ -14,6 +21,8 @@ STAR_COLOR = (255, 255, 0)
 STAR_RADIUS = 10
 PLAYER_COLOR = (255, 0, 0)
 PLAYER_RADIUS = 15
+
+BACKGROUND_COLOR = (250, 235, 228)
 
 WIDTH = 1280
 HEIGHT = 720
@@ -177,7 +186,13 @@ if __name__ == "__main__":
 
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    screen.set_alpha(0.1)
     pygame.display.set_caption("Simple Level Editor")
+
+    if platform == "win32":
+        hwnd = pygame.display.get_wm_info()["window"]
+        win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED)
+        win32gui.SetLayeredWindowAttributes(hwnd, win32api.RGB(*BACKGROUND_COLOR), 120, win32con.LWA_ALPHA)
 
     saved_lines, saved_stars, player, file_exists = parse_from_file(filepath)
                 
@@ -191,7 +206,7 @@ if __name__ == "__main__":
     TO_REWIND = []
 
     while playing := True:
-        screen.fill((0, 0, 0))
+        screen.fill(BACKGROUND_COLOR)
         draw(saved_lines, saved_stars, player)
         if current_polyline:
             draw(appending_lines + [current_polyline], appending_stars, player)

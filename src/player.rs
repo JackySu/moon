@@ -9,7 +9,7 @@ pub static PLAYER_RADIUS: f32 = 25.0;
 pub static PLAYER_GRAVITY_SCALE: f32 = 9.8;
 pub static PLAYER_DRAW_LINE_WIDTH: f32 = 10.;
 pub static PLAYER_DRAW_DISTANCE_TO_BALL_THRESHOLD: f32 = 23.;
-pub static PLAYER_DRAW_VERTICES_DISTANCE_THRESHOLD: f32 = 5.;
+pub static PLAYER_DRAW_VERTICES_DISTANCE_THRESHOLD: f32 = 5.8;
 pub static PLAYER_ERASE_DISTANCE_THRESHOLD: f32 = 20.;
 pub static PLAYER_DRAW_Z_INDEX: f32 = 1.;
 
@@ -232,6 +232,7 @@ pub fn mouse_draw(
                     if vec_mouse.distance(*last_endpoint) < PLAYER_DRAW_VERTICES_DISTANCE_THRESHOLD {
                         return;
                     }
+
                     new_line_shape.push(vec_mouse);
                     let mut new_path = PathBuilder::new();
                     new_path.move_to(new_line_shape[0]);
