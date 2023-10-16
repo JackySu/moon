@@ -79,8 +79,10 @@ pub fn run_app() {
         .insert_resource(Lines::default())
         .insert_resource(LevelState::default())
         .insert_resource(GameLevels::default())
-        .add_systems(Startup, (setup_graphics, load_all_levels, setup_music))
-        .add_systems(OnEnter(GameState::Playing), (setup_current_level, spawn_player,))
+        .add_systems(Startup, (setup_graphics, load_all_levels, setup_music, setup_slow_load))
+        .add_systems(OnEnter(GameState::Loading), (setup_current_level,).run_if(in_state(GameState::Loading)))
+        .add_systems(Update, (slow_load_level, switch_playing).run_if(in_state(GameState::Loading)))
+        .add_systems(OnEnter(GameState::Playing), (spawn_player,))
         .add_systems(Update, (set_gravity, mouse_draw, collect_star).run_if(in_state(GameState::Playing)))
         .add_systems(OnExit(GameState::Playing), (cleanup_level, switch_level))
         .run();
@@ -96,5 +98,9 @@ fn setup_music(asset_server: Res<AssetServer>, audio: Res<Audio>) {
         .looped()
         .fade_in(AudioTween::new(Duration::from_secs(1), AudioEasing::OutPowi((2))))
         .with_volume(0.62);
+}
+
+fn setup_slow_load(mut commands: Commands) {
+    commands.insert_resource(SlowLoadTimer(Timer::from_seconds(0.3, TimerMode::Repeating)));
 }
 

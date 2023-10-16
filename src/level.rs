@@ -1,6 +1,3 @@
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -10,7 +7,7 @@ pub static STAR_Z_INDEX: f32 = 3.;
 pub static LEVEL_SCENE_LINE_WIDTH: f32 = 5.;
 pub static STAR_RADIUS: f32 = 15.;
 
-use crate::{GameState, ColliderType, PlayerStatus, level};
+use crate::{GameState, ColliderType, PlayerStatus};
 
 #[derive(Debug, Clone, Copy, Default, Resource, Reflect)]
 #[reflect(Resource)]
@@ -88,7 +85,6 @@ impl Default for GameLevels {
 
 
 pub fn load_all_levels(
-    mut next_state: ResMut<NextState<GameState>>,
     mut all_levels: ResMut<GameLevels>,
     mut current_level_state: ResMut<LevelState>
 ) {
@@ -101,12 +97,10 @@ pub fn load_all_levels(
         id: 0,
         stars: all_levels.0[0].stars.len(),
     };
-    next_state.set(GameState::Playing);
 }
 
 pub fn switch_level(
-    mut next_state: ResMut<NextState<GameState>>,
-    all_levels: ResMut<GameLevels>,
+    all_levels: Res<GameLevels>,
     mut level_state: ResMut<LevelState>,
 ) {
     let state = *level_state;
@@ -123,8 +117,11 @@ pub fn switch_level(
             stars: all_levels.0[0].stars.len(),
         };
     }
-    next_state.set(GameState::Playing);
 }
+
+#[derive(Debug, Clone, Resource)]
+pub struct SlowLoadTimer(pub Timer);
+
 
 pub fn setup_current_level(
     all_levels: Res<GameLevels>,
@@ -152,7 +149,8 @@ pub fn setup_current_level(
             ColliderType::Scene,
         )).insert((
             Transform::from_xyz(0., 0., SCENE_Z_INDEX),
-        ));
+        ))
+        .insert(Visibility::Hidden);
     }
 
     let stars = &all_levels.0[level_id].stars;
@@ -172,9 +170,33 @@ pub fn setup_current_level(
             ActiveEvents::COLLISION_EVENTS,
         ))
         .insert(Transform::from_xyz(star.x, star.y, SCENE_Z_INDEX),)
+        .insert(Visibility::Hidden)
         .insert(Sensor);
     }
     info!("Level {} set up, playing", level_id);
+}
+
+pub fn slow_load_level(
+    mut slow_load_timer: ResMut<SlowLoadTimer>,
+    time: Res<Time>,
+    mut q_scene: Query<&mut Visibility, With<ColliderType>>,
+) {
+    if slow_load_timer.0.tick(time.delta()).just_finished() {
+        for mut visibility in q_scene.iter_mut().filter(|v| **v == Visibility::Hidden).take(1) {
+            *visibility = Visibility::Visible;
+        }
+    }
+}
+
+pub fn switch_playing(
+    mut next_state: ResMut<NextState<GameState>>,
+    mut q_scene: Query<&mut Visibility, With<ColliderType>>,
+) {
+    // if all scenes and stars are visible, then playing
+    if q_scene.iter_mut().filter(|v| **v == Visibility::Hidden).count() > 0 {
+        return;
+    }
+    next_state.set(GameState::Playing);
 }
 
 pub fn collect_star(
