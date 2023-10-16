@@ -8,7 +8,7 @@ use crate::{ColliderType, GameLevels, LevelState, level, GameState};
 pub static PLAYER_RADIUS: f32 = 25.0;
 pub static PLAYER_GRAVITY_SCALE: f32 = 9.8;
 pub static PLAYER_DRAW_LINE_WIDTH: f32 = 10.;
-pub static PLAYER_DRAW_DISTANCE_TO_BALL_THRESHOLD: f32 = 23.;
+pub static PLAYER_DRAW_DISTANCE_TO_BALL_THRESHOLD: f32 = 25.;
 pub static PLAYER_DRAW_VERTICES_DISTANCE_THRESHOLD: f32 = 5.8;
 pub static PLAYER_ERASE_DISTANCE_THRESHOLD: f32 = 20.;
 pub static PLAYER_DRAW_Z_INDEX: f32 = 1.;
@@ -214,7 +214,11 @@ pub fn mouse_draw(
                 }
                 if despawn_original_entity == true {
                     new_vertices_hm.remove(&e);
-                    commands.entity(e).despawn_recursive();
+                    if let Some(e) = commands.get_entity(e) {
+                        e.despawn_recursive();
+                    } else {
+                        warn!("Failed to despawn entity: {:?}", e);
+                    }
                 }
             }
             lines.0 = new_vertices_hm;

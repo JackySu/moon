@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 use bevy_rapier2d::prelude::*;
+use bevy_kira_audio::prelude::*;
 
 pub static SCENE_Z_INDEX: f32 = -1.;
 pub static STAR_Z_INDEX: f32 = 3.;
@@ -28,7 +29,6 @@ impl Level {
         let levels = [
             include_str!("./levels/welcome.txt"),
             include_str!("./levels/howareu.txt"),
-            include_str!("./levels/test.txt"),
         ];
 
         levels.iter().map(|f| {
@@ -100,9 +100,14 @@ pub fn load_all_levels(
 }
 
 pub fn switch_level(
+    mut next_state: ResMut<NextState<GameState>>,
     all_levels: Res<GameLevels>,
     mut level_state: ResMut<LevelState>,
+    q_scene: Query<&Visibility, With<ColliderType>>,
 ) {
+    if q_scene.iter().filter(|v| **v == Visibility::Visible).count() > 0 {
+        return;
+    }
     let state = *level_state;
     if state.id < all_levels.0.len() - 1 {
         info!("Switching to level {}", level_state.id + 1);
@@ -117,6 +122,7 @@ pub fn switch_level(
             stars: all_levels.0[0].stars.len(),
         };
     }
+    next_state.set(GameState::Loading);
 }
 
 #[derive(Debug, Clone, Resource)]
@@ -149,8 +155,7 @@ pub fn setup_current_level(
             ColliderType::Scene,
         )).insert((
             Transform::from_xyz(0., 0., SCENE_Z_INDEX),
-        ))
-        .insert(Visibility::Hidden);
+        )).insert(Visibility::Hidden);
     }
 
     let stars = &all_levels.0[level_id].stars;
@@ -188,12 +193,24 @@ pub fn slow_load_level(
     }
 }
 
-pub fn switch_playing(
-    mut next_state: ResMut<NextState<GameState>>,
+pub fn slow_clean_level(
+    mut slow_load_timer: ResMut<SlowLoadTimer>,
+    time: Res<Time>,
     mut q_scene: Query<&mut Visibility, With<ColliderType>>,
 ) {
+    if slow_load_timer.0.tick(time.delta()).just_finished() {
+        for mut visibility in q_scene.iter_mut().filter(|v| **v == Visibility::Visible).take(1) {
+            *visibility = Visibility::Hidden;
+        }
+    }
+}
+
+pub fn switch_playing(
+    mut next_state: ResMut<NextState<GameState>>,
+    q_scene: Query<&Visibility, With<ColliderType>>,
+) {
     // if all scenes and stars are visible, then playing
-    if q_scene.iter_mut().filter(|v| **v == Visibility::Hidden).count() > 0 {
+    if q_scene.iter().filter(|v| **v == Visibility::Hidden).count() > 0 {
         return;
     }
     next_state.set(GameState::Playing);
@@ -221,7 +238,7 @@ pub fn collect_star(
                         level_state.stars -= 1;
                         info!("No more stars left, switching level");
                         commands.entity(star).despawn();
-                        next_state.set(GameState::Loading);
+                        next_state.set(GameState::Cleaning);
                         return;
                     }
                     level_state.stars -= 1;
@@ -233,7 +250,7 @@ pub fn collect_star(
     }
 }
 
-pub fn cleanup_level(
+pub fn clean_current_level(
     mut commands: Commands,
     q_colliders: Query<Entity, With<ColliderType>>,
     q_player: Query<Entity, With<PlayerStatus>>
@@ -244,4 +261,12 @@ pub fn cleanup_level(
     for entity in q_player.iter() {
         commands.entity(entity).despawn_recursive();
     }
+}
+
+pub fn play_drawing_sound(
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
+) {
+    audio.play(asset_server.load("drawing.ogg"))
+        .with_volume(0.3);
 }

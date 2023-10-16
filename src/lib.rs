@@ -42,6 +42,7 @@ pub enum GameState {
     #[default]
     Loading,
     Playing,
+    Cleaning,
 }
 
 pub const PIXELS_PER_METER: f32 = 100.0;
@@ -80,11 +81,12 @@ pub fn run_app() {
         .insert_resource(LevelState::default())
         .insert_resource(GameLevels::default())
         .add_systems(Startup, (setup_graphics, load_all_levels, setup_music, setup_slow_load))
-        .add_systems(OnEnter(GameState::Loading), (setup_current_level,).run_if(in_state(GameState::Loading)))
+        .add_systems(OnEnter(GameState::Loading), (setup_current_level, play_drawing_sound).run_if(in_state(GameState::Loading)))
         .add_systems(Update, (slow_load_level, switch_playing).run_if(in_state(GameState::Loading)))
         .add_systems(OnEnter(GameState::Playing), (spawn_player,))
         .add_systems(Update, (set_gravity, mouse_draw, collect_star).run_if(in_state(GameState::Playing)))
-        .add_systems(OnExit(GameState::Playing), (cleanup_level, switch_level))
+        .add_systems(Update, (slow_clean_level, switch_level).run_if(in_state(GameState::Cleaning)))
+        .add_systems(OnExit(GameState::Cleaning), (clean_current_level,))
         .run();
 }
 
@@ -101,6 +103,6 @@ fn setup_music(asset_server: Res<AssetServer>, audio: Res<Audio>) {
 }
 
 fn setup_slow_load(mut commands: Commands) {
-    commands.insert_resource(SlowLoadTimer(Timer::from_seconds(0.3, TimerMode::Repeating)));
+    commands.insert_resource(SlowLoadTimer(Timer::from_seconds(0.04, TimerMode::Repeating)));
 }
 
