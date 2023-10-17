@@ -7,6 +7,7 @@ pub static SCENE_Z_INDEX: f32 = -1.;
 pub static STAR_Z_INDEX: f32 = 3.;
 pub static LEVEL_SCENE_LINE_WIDTH: f32 = 5.;
 pub static STAR_RADIUS: f32 = 15.;
+pub static SLOW_CLEAN_LEVEL_ALPHA_STEP: f32 = 0.04;
 
 use crate::{GameState, ColliderType, PlayerStatus};
 
@@ -151,7 +152,10 @@ pub fn setup_current_level(
                 ),
                 ..Default::default()
             },
-            Stroke::new(Color::BLACK, LEVEL_SCENE_LINE_WIDTH),
+            Stroke {
+                color: Color::BLACK, 
+                options: StrokeOptions::default().with_line_width(LEVEL_SCENE_LINE_WIDTH).with_line_join(LineJoin::Round),
+            },
             ColliderType::Scene,
         )).insert((
             Transform::from_xyz(0., 0., SCENE_Z_INDEX),
@@ -187,8 +191,8 @@ pub fn slow_load_level(
     mut q_scene: Query<&mut Visibility, With<ColliderType>>,
 ) {
     if slow_load_timer.0.tick(time.delta()).just_finished() {
-        for mut visibility in q_scene.iter_mut().filter(|v| **v == Visibility::Hidden).take(1) {
-            *visibility = Visibility::Visible;
+        for mut v in q_scene.iter_mut().filter(|v| **v == Visibility::Hidden).take(1) {
+            *v = Visibility::Visible;
         }
     }
 }
@@ -196,11 +200,23 @@ pub fn slow_load_level(
 pub fn slow_clean_level(
     mut slow_load_timer: ResMut<SlowLoadTimer>,
     time: Res<Time>,
-    mut q_scene: Query<&mut Visibility, With<ColliderType>>,
+    mut q_scene: Query<(Entity, &Stroke, &mut Visibility), With<ColliderType>>,
+    mut commands: Commands,
 ) {
     if slow_load_timer.0.tick(time.delta()).just_finished() {
-        for mut visibility in q_scene.iter_mut().filter(|v| **v == Visibility::Visible).take(1) {
-            *visibility = Visibility::Hidden;
+        for (e, s, mut v) in q_scene.iter_mut() {
+            // shift the entity with a new alpha value
+            let mut color = s.color.clone();
+            color.set_a((color.a() - SLOW_CLEAN_LEVEL_ALPHA_STEP).max(0.0));
+            if color.a() == 0. {
+                *v = Visibility::Hidden;
+                continue;
+            }
+            commands.entity(e).remove::<Stroke>();
+            commands.entity(e).insert(Stroke {
+                color,
+                options: StrokeOptions::default().with_line_width(LEVEL_SCENE_LINE_WIDTH).with_line_join(LineJoin::Round),
+            },);
         }
     }
 }

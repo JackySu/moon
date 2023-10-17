@@ -71,7 +71,10 @@ pub fn mouse_draw(
                     path: GeometryBuilder::build_as(&new_path),
                     ..default()
                 },
-                Stroke::new(Color::GRAY, PLAYER_DRAW_LINE_WIDTH),
+                Stroke {
+                    color: Color::GRAY,
+                    options: StrokeOptions::default().with_line_width(PLAYER_DRAW_LINE_WIDTH).with_line_join(LineJoin::Round),
+                },
                 ColliderType::Ground,
             ))
             .insert(Transform::from_xyz(0., 0., PLAYER_DRAW_Z_INDEX))
@@ -124,7 +127,10 @@ pub fn mouse_draw(
                                     path: GeometryBuilder::build_as(&new_line_path),
                                     ..default()
                                 },
-                                Stroke::new(Color::GRAY, PLAYER_DRAW_LINE_WIDTH),
+                                Stroke {
+                                    color: Color::GRAY,
+                                    options: StrokeOptions::default().with_line_width(PLAYER_DRAW_LINE_WIDTH).with_line_join(LineJoin::Round),
+                                },
                                 ColliderType::Ground,
                             ))
                             .insert(Transform::from_xyz(0., 0., PLAYER_DRAW_Z_INDEX))
@@ -179,7 +185,10 @@ pub fn mouse_draw(
                             path: GeometryBuilder::build_as(&new_line_path),
                             ..default()
                         },
-                        Stroke::new(Color::GRAY, PLAYER_DRAW_LINE_WIDTH),
+                        Stroke {
+                            color: Color::GRAY,
+                            options: StrokeOptions::default().with_line_width(PLAYER_DRAW_LINE_WIDTH).with_line_join(LineJoin::Round),
+                        },
                         ColliderType::Ground,
                     ))
                     .insert((
